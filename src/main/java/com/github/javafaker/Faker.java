@@ -1,21 +1,18 @@
 package com.github.javafaker;
 
-import static org.apache.commons.lang.StringUtils.capitalize;
-import static org.apache.commons.lang.StringUtils.join;
-import static org.apache.commons.lang.math.RandomUtils.nextInt;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.WordUtils;
-import org.apache.commons.lang.math.RandomUtils;
 import org.ho.yaml.Yaml;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.CaseFormat;
+import com.google.common.base.Joiner;
 
 /**
  * Provides utility methods for generating fake strings, such as names, phone
@@ -24,17 +21,18 @@ import org.slf4j.LoggerFactory;
  * @author ren
  *
  */
-@SuppressWarnings({ "unchecked", "rawtypes" })
 public class Faker {
+	
     private static final Logger logger = LoggerFactory.getLogger(Faker.class);
-    private static final char[] METHOD_NAME_DELIMITERS = { '_' };
+    private static final Random RANDOM = new Random();
+    private static final Joiner SPACE_JOINER = Joiner.on(" ");
 
     private Map<String, Object> fakeValuesMap;
 
-    public Faker() {
+    Faker() {
         this(Locale.ENGLISH);
     }
-
+    
     public Faker(Locale locale) {
         logger.info("Using default locale " + locale);
         String languageCode = locale.getLanguage();
@@ -47,7 +45,7 @@ public class Faker {
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < numberString.length(); i++) {
             if (numberString.charAt(i) == '#') {
-                sb.append(RandomUtils.nextInt(10));
+                sb.append(RANDOM.nextInt(10));
             } else {
                 sb.append(numberString.charAt(i));
             }
@@ -60,7 +58,7 @@ public class Faker {
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < letterString.length(); i++) {
             if (letterString.charAt(i) == '?') {
-                sb.append((char) (97 + RandomUtils.nextInt(26))); // a-z
+                sb.append((char) (97 + RANDOM.nextInt(26))); // a-z
             } else {
                 sb.append(letterString.charAt(i));
             }
@@ -81,7 +79,7 @@ public class Faker {
      */
     public Object fetch(String key) {
         List valuesArray = (List) fetchObject(key);
-        return valuesArray.get(RandomUtils.nextInt(valuesArray.size()));
+        return valuesArray.get(RANDOM.nextInt(valuesArray.size()));
     }
 
     public String fetchString(String key) {
@@ -113,8 +111,7 @@ public class Faker {
             // remove leading colon
             String methodName = nameFormat.get(i).substring(1);
             // convert to camel case
-            methodName = WordUtils.capitalizeFully(methodName, METHOD_NAME_DELIMITERS).replaceAll("_", "");
-            methodName = methodName.substring(0, 1).toLowerCase() + methodName.substring(1);
+            methodName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, methodName);
 
             try {
                 nameParts[i] = (String) Faker.class.getDeclaredMethod(methodName, (Class[]) null).invoke(this);
@@ -124,7 +121,7 @@ public class Faker {
             }
         }
 
-        String name = StringUtils.join(nameParts, " ");
+        String name = SPACE_JOINER.join(nameParts);
         return name;
     }
 
@@ -160,7 +157,7 @@ public class Faker {
     }
 
     public String sentence(int wordCount) {
-        return capitalize(join(words(wordCount + RandomUtils.nextInt(6)), " ") + ".");
+        return SPACE_JOINER.join(words(wordCount + RANDOM.nextInt(6))) + ".";
     }
 
     public String sentence() {
@@ -176,7 +173,7 @@ public class Faker {
     }
 
     public String paragraph(int sentenceCount) {
-        return join(sentences(sentenceCount + nextInt(3)), " ");
+        return SPACE_JOINER.join(sentences(sentenceCount + RANDOM.nextInt(3)));
     }
 
     public String paragraph() {
@@ -194,10 +191,10 @@ public class Faker {
     // address
 
     public String streetName() {
-        List<String> possibleStreetNames = new ArrayList<String>();
-        possibleStreetNames.add(join(new Object[] { lastName(), streetSuffix() }, " "));
-        possibleStreetNames.add(join(new Object[] { firstName(), streetSuffix() }, " "));
-        return possibleStreetNames.get(nextInt(possibleStreetNames.size()));
+        List<String> possibleStreetNames = new ArrayList<String>(2);
+        possibleStreetNames.add(SPACE_JOINER.join(lastName(), streetSuffix()));
+        possibleStreetNames.add(SPACE_JOINER.join(firstName(), streetSuffix()));
+        return possibleStreetNames.get(RANDOM.nextInt(possibleStreetNames.size()));
     }
 
     public String streetAddress(boolean includeSecondary) {

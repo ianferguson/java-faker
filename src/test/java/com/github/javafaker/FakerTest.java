@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class FakerTest {
-    private static final Logger logger = LoggerFactory.getLogger(FakerTest.class);
+    private final Logger logger = LoggerFactory.getLogger(FakerTest.class);
     private Faker faker = new Faker();
 
     @Test
